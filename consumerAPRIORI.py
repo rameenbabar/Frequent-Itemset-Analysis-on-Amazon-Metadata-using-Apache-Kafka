@@ -1,13 +1,15 @@
 import json
 from kafka import KafkaConsumer
 from collections import defaultdict
+import pymongo
 
-def apriori(data, min_support):
+def apriori(data, min_support, collection):
     """
     Function to run the Apriori algorithm on a list of transactions to find frequent itemsets.
     Args:
     - data: list of transactions (list of lists)
     - min_support: int, the minimum support threshold for an itemset to be considered frequent
+    - collection: MongoDB collection to store results
 
     Returns:
     - set of frequent items that meet or exceed the min_support threshold
@@ -22,8 +24,20 @@ def apriori(data, min_support):
     # Determine which items meet the minimum support threshold
     frequent_items = {item for item, count in item_count.items() if count >= min_support}
 
+    # Store results in MongoDB
+    result = {
+        "min_support": min_support,
+        "frequent_items": list(frequent_items)
+    }
+    collection.insert_one(result)
+
     print(f"Frequent items/categories with support threshold {min_support}: {frequent_items}")
     return frequent_items
+
+# Setup MongoDB connection
+client = pymongo.MongoClient("mongodb://localhost:27017/")
+db = client["apriori_data"]
+collection = db["frequent_item_sets"]
 
 # Kafka consumer setup
 bootstrap_servers = ['localhost:9092']
@@ -47,7 +61,6 @@ for message in consumer:
     item = message.value
     if 'also_view' in item:
         categories_data.append(item['also_view'])
-        # Maintain the window size
         if len(categories_data) > window_size:
             categories_data.pop(0)  # Remove the oldest transaction if window size is exceeded
 
@@ -59,9 +72,9 @@ for message in consumer:
     # Run Apriori algorithm when the window is full
     if len(categories_data) == window_size:
         print("\n\nRunning Apriori on also_view data...")
-        apriori(categories_data, min_support)
+        apriori(categories_data, min_support, collection)
 
     if len(related_data) == window_size:
         print("\n\nRunning Apriori on also_buy data...")
-        apriori(related_data, min_support)
+        apriori(related_data, min_support, collection)
 
