@@ -50,7 +50,7 @@ transactions = []
 # Consuming messages
 for message in consumer:
     item = message.value
-    transaction = item.get('category')  
+    transaction = item.get('also_buy')  
     if transaction:
         transactions.append(transaction)
         # Maintain the window size
