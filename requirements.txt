@@ -1,0 +1,15 @@
+# Kafka Integration
+kafka-python==2.0.2
+
+# MongoDB Integration
+pymongo==4.6.1
+
+# FP-Growth
+pyfpgrowth==1.0
+
+# Data Manipulation & Processing
+pandas==2.2.1
+tqdm==4.66.2
+
+# JSON Handling & Parsing 
+ujson==5.9.0
